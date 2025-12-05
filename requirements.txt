@@ -1,0 +1,16 @@
+streamlit
+pandas
+plotly
+matplotlib
+altair
+pycountry
+geopandas 
+folium
+scikit-learn
+rapidfuzz
+pycountry-convert
+
+# the code to install these packages can be run using:
+# 
+# the code to start the streamlit app can be run using:
+# streamlit run your_app.py
