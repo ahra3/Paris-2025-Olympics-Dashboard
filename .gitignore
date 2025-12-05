@@ -1,5 +1,45 @@
-.vscode/
-.DS_Store
+# -----------------------------
+# PYTHON
+# -----------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# -----------------------------
+# VIRTUAL ENVIRONMENTS
+# -----------------------------
+venv/
+env/
+.venv/
+olympic_env/
 .olympic_env/
-.test.py
-.git/
+*/olympic_env/
+
+# -----------------------------
+# IDE / SYSTEM
+# -----------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# -----------------------------
+# LOGS
+# -----------------------------
+*.log
+
+# -----------------------------
+# JUPYTER NOTEBOOKS (optional)
+*.ipynb
+
+# -----------------------------
+# STREAMLIT CACHE
+# -----------------------------
+.streamlit/
+
+# -----------------------------
+# LOCAL DATA (optional)
+# Remove these lines if you want datasets included
+# -----------------------------
+data/
