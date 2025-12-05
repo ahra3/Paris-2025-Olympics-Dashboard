@@ -14,6 +14,7 @@ Below is a detailed breakdown of each dashboard page, including objectives, key 
 ---
 
 ## 🏠 Page 1 — Overview (The Command Center)
+#### Accomplished BY : TAHRI Zine Eddine
 
 ### **Objective**
 
@@ -49,6 +50,8 @@ A dynamic **Athlete Profile Card** has been added directly on the home page.
 
 
 ## 🗺️ Page 2 — Global Analysis (Worldwide Insights)
+#### Accomplished BY : MAROUF Zohra
+
 
 ### **Objective**
 
@@ -108,6 +111,8 @@ A custom visualization ranking the **Top 10 Sports** based on total medal count.
 ---
 
 ## 👤 Page 3 — Athlete Performance (Athlete Insights Hub)
+#### Accomplished BY : KAMBOUZ Nouha
+
 
 ### **Objective**
 
@@ -160,6 +165,8 @@ A head-to-head comparison of two selected nations on all medal types.
 ---
 
 ## 🏟️ Page 4 — Sports & Events (The Competition Arena)
+#### Accomplished BY : TAHRI Zine Eddine
+
 
 ### **Objective**
 
