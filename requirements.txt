@@ -1,16 +1,24 @@
+# --- Core UI & App ---
 streamlit
 pandas
+numpy
 plotly
 matplotlib
 altair
+pillow
+requests
+python-dateutil
+
+# --- Geographic & Country Utilities ---
 pycountry
-geopandas 
+pycountry-convert
+geopandas
 folium
+
+# --- Data Processing / ML ---
 scikit-learn
 rapidfuzz
-pycountry-convert
 
-# the code to install these packages can be run using:
-# 
-# the code to start the streamlit app can be run using:
-# streamlit run your_app.py
+# --- Notes ---
+# Do not pin streamlit to 1.39.0.
+# Latest Streamlit restores your old UI appearance.

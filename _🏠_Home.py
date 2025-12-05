@@ -15,8 +15,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.title("🏠 Overview — Paris 2024 Olympics Dashboard")
-st.markdown("### High-Level Summary of Countries, Sports, Athletes & Medals")
+st.title("🏅Paris 2024 Olympics Dashboard")
+st.markdown("### Explore the world of sports at a glance, uncover how nations, athletes, and medals come together in one dynamic dashboard!!")
 
 # -----------------------------------------------------
 # Load datasets
@@ -72,7 +72,7 @@ else:
 # -----------------------------------------------------
 # KPI SECTION
 # -----------------------------------------------------
-st.subheader("📊 Overall Statistics (Filtered)")
+st.subheader("📊 Overall Statistics ")
 
 total_athletes = athletes_filtered["name"].nunique()
 total_countries = len(filters["selected_countries"]) if filters["selected_countries"] else df_medals_total["country_code"].nunique()
@@ -95,10 +95,18 @@ st.markdown("---")
 st.header("🔍 Athlete Profile")
 st.markdown("Select an athlete to view medal history and profile information.")
 
-dropdown_names = sorted(athletes_filtered["name"].unique())
+# Clean athlete names: remove numeric-only garbage like "671"
+valid_names = [
+    n for n in athletes_filtered["name"].unique()
+    if isinstance(n, str) and not n.strip().isdigit()
+]
+
+dropdown_names = sorted(valid_names)
+
 selected_athlete = st.selectbox("Choose an athlete:", [""] + dropdown_names)
 
 if selected_athlete:
+
     # Athlete row
     athlete_row = athletes_filtered[
         athletes_filtered["name"] == selected_athlete
@@ -117,8 +125,6 @@ if selected_athlete:
     with left:
         st.subheader(f"🏅 {selected_athlete} ({athlete_row['country']})")
         st.markdown(f"**Gender:** {athlete_row.get('gender', 'N/A')}")
-        # athletes.csv has no discipline; you can later enrich from events/teams
-        st.markdown("**Discipline:** Unknown (not available in athletes.csv)")
 
     with right:
         st.subheader("Medal Summary")
@@ -131,6 +137,7 @@ if selected_athlete:
             c1.metric("Gold", medal_counts.get("Gold", 0))
             c2.metric("Silver", medal_counts.get("Silver", 0))
             c3.metric("Bronze", medal_counts.get("Bronze", 0))
+
 else:
     st.info("Select an athlete or adjust country filters.")
 
