@@ -241,7 +241,7 @@ http://localhost:8501
  
 
 # 🚀 Live Deployment :
-   👉 https://paris-2025-olympics-dashboard.streamlit.app/Global_Analysis
+   👉 https://paris-2025-olympics-dashboard.streamlit.app
 
  
 
