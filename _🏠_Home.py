@@ -3,11 +3,16 @@ import pandas as pd
 import plotly.express as px
 import os
 
-from utils.preprocessing import prepare_medals_datasets, normalize_name
+from utils.preprocessing import (
+    prepare_medals_datasets,
+    normalize_name,
+    add_continent_column
+)
 from utils.filters import global_filters, apply_global_filters
 
+
 # -----------------------------------------------------
-# Page setup
+# PAGE SETUP
 # -----------------------------------------------------
 st.set_page_config(
     page_title="🏠 Overview | LA28 Olympic Challenge",
@@ -18,8 +23,9 @@ st.set_page_config(
 st.title("🏅Paris 2024 Olympics Dashboard")
 st.markdown("### Explore the world of sports at a glance, uncover how nations, athletes, and medals come together in one dynamic dashboard!!")
 
+
 # -----------------------------------------------------
-# Load datasets
+# LOAD DATASETS
 # -----------------------------------------------------
 df_medals_total, df_medallists, df_medals = prepare_medals_datasets()
 
@@ -34,48 +40,68 @@ def load_extra_data():
 
 athletes, teams, events, nocs = load_extra_data()
 
-# -----------------------------------------------------
-# Filters based on ATHLETES (not medallists)
-# -----------------------------------------------------
-filters = global_filters(athletes)
+# ADD CONTINENT COLUMN TO ATHLETES
+athletes = add_continent_column(athletes, "country_code")
+
 
 # -----------------------------------------------------
-# Normalize medallist names once
+# GLOBAL FILTERS (with continent)
 # -----------------------------------------------------
-df_medallists["name_norm"] = df_medallists["name"].apply(normalize_name)
+filters = global_filters(df_medallists)
 
-# Optional: filtered medallists if you need them later
+# Filter medallists (base dataset for global filtering)
 df_filtered_medallists = apply_global_filters(df_medallists, filters)
 
-# -----------------------------------------------------
-# FIX: filter athletes by country_code (NOC), not country name
-# -----------------------------------------------------
-athletes["name_norm"] = athletes["name"].apply(normalize_name)
-
-if filters["selected_countries"]:
-    mask_ath = athletes["country_code"].isin(filters["selected_countries"])
-else:
-    mask_ath = pd.Series(True, index=athletes.index)
-
-athletes_filtered = athletes[mask_ath].copy()
 
 # -----------------------------------------------------
-# Filtered medals_total (by NOC)
+# FILTER MEDALS TOTAL
 # -----------------------------------------------------
-if filters["selected_countries"]:
-    df_medals_total_filtered = df_medals_total[
-        df_medals_total["country_code"].isin(filters["selected_countries"])
+df_medals_total_filtered = df_medals_total.copy()
+
+# Continent filter
+if filters["continent"]:
+    df_medals_total_filtered = df_medals_total_filtered[
+        df_medals_total_filtered["continent"].isin(filters["continent"])
     ]
-else:
-    df_medals_total_filtered = df_medals_total.copy()
+
+# Country filter
+if filters["selected_countries"]:
+    df_medals_total_filtered = df_medals_total_filtered[
+        df_medals_total_filtered["country_code"].isin(filters["selected_countries"])
+    ]
+
 
 # -----------------------------------------------------
-# KPI SECTION
+# FILTER ATHLETES (continent now works)
 # -----------------------------------------------------
-st.subheader("📊 Overall Statistics ")
+athletes_filtered = athletes.copy()
+
+# 1️⃣ Continent filter
+if filters["continent"]:
+    athletes_filtered = athletes_filtered[
+        athletes_filtered["continent"].isin(filters["continent"])
+    ]
+
+# 2️⃣ Country filter
+if filters["selected_countries"]:
+    athletes_filtered = athletes_filtered[
+        athletes_filtered["country_code"].isin(filters["selected_countries"])
+    ]
+
+# 3️⃣ Gender filter
+if filters["selected_genders"]:
+    athletes_filtered = athletes_filtered[
+        athletes_filtered["gender"].isin(filters["selected_genders"])
+    ]
+
+
+# -----------------------------------------------------
+# KPI SECTION (NOW FULLY FILTERED)
+# -----------------------------------------------------
+st.subheader("📊 Overall Statistics")
 
 total_athletes = athletes_filtered["name"].nunique()
-total_countries = len(filters["selected_countries"]) if filters["selected_countries"] else df_medals_total["country_code"].nunique()
+total_countries = df_medals_total_filtered["country_code"].nunique()
 total_sports = events["sport"].nunique()
 total_medals = df_medals_total_filtered["Total"].sum()
 total_events = events["event"].nunique()
@@ -89,35 +115,29 @@ c5.metric("Events", f"{total_events:,}")
 
 st.markdown("---")
 
+
 # -----------------------------------------------------
 # ATHLETE PROFILE
 # -----------------------------------------------------
 st.header("🔍 Athlete Profile")
 st.markdown("Select an athlete to view medal history and profile information.")
 
-# Clean athlete names: remove numeric-only garbage like "671"
 valid_names = [
     n for n in athletes_filtered["name"].unique()
     if isinstance(n, str) and not n.strip().isdigit()
 ]
 
-dropdown_names = sorted(valid_names)
-
-selected_athlete = st.selectbox("Choose an athlete:", [""] + dropdown_names)
+selected_athlete = st.selectbox("Choose an athlete:", [""] + sorted(valid_names))
 
 if selected_athlete:
-
-    # Athlete row
     athlete_row = athletes_filtered[
         athletes_filtered["name"] == selected_athlete
     ].iloc[0]
 
-    # Normalized key
     norm_selected = normalize_name(selected_athlete)
 
-    # Medals from ALL medallists (not filtered)
-    athlete_medals = df_medallists[
-        df_medallists["name_norm"] == norm_selected
+    athlete_medals = df_filtered_medallists[
+        df_filtered_medallists["name_norm"] == norm_selected
     ]
 
     left, right = st.columns([3, 2])
@@ -132,19 +152,20 @@ if selected_athlete:
         if athlete_medals.empty:
             st.info("This athlete has no medals.")
         else:
-            medal_counts = athlete_medals["medal_type"].value_counts()
+            counts = athlete_medals["medal_type"].value_counts()
             c1, c2, c3 = st.columns(3)
-            c1.metric("Gold", medal_counts.get("Gold", 0))
-            c2.metric("Silver", medal_counts.get("Silver", 0))
-            c3.metric("Bronze", medal_counts.get("Bronze", 0))
+            c1.metric("Gold", counts.get("Gold", 0))
+            c2.metric("Silver", counts.get("Silver", 0))
+            c3.metric("Bronze", counts.get("Bronze", 0))
 
 else:
-    st.info("Select an athlete or adjust country filters.")
+    st.info("Select an athlete or adjust filters.")
 
 st.markdown("---")
 
+
 # -----------------------------------------------------
-# PIE CHART
+# PIE CHART (FILTERED)
 # -----------------------------------------------------
 st.header("🥇 Global Medal Distribution (Filtered)")
 
@@ -175,8 +196,9 @@ else:
 
 st.markdown("---")
 
+
 # -----------------------------------------------------
-# TOP 10 COUNTRIES
+# TOP 10 COUNTRIES (FILTERED)
 # -----------------------------------------------------
 st.header("🥇 Top 10 Countries by Medals")
 
@@ -203,5 +225,6 @@ if not top10.empty:
     )
     fig.update_yaxes(autorange="reversed")
     st.plotly_chart(fig, use_container_width=True)
+
 else:
     st.info("No medal data for selected filters.")
