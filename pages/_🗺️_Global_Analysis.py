@@ -43,6 +43,7 @@ st.markdown("Explore all global medal insights using the sidebar filters and the
 filters = global_filters(df_medallists)
 df_filtered = apply_global_filters(df_medallists, filters)
 
+# If no data, stop completely
 if df_filtered.empty:
     st.warning("No data matches your filters.")
     st.stop()
@@ -84,6 +85,9 @@ def aggregate_sunburst(df):
     ).size().reset_index(name="count")
 
 
+# -----------------------------------------------------
+# APPLY AGGREGATION
+# -----------------------------------------------------
 df_country_medals = aggregate_country_medals(df_filtered)
 df_continent_medals = aggregate_continent_medals(df_filtered)
 df_sunburst = aggregate_sunburst(df_filtered)
@@ -108,14 +112,17 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 with tab1:
     st.subheader("🌍 World Medal Map")
 
-    fig_map = px.choropleth(
-        df_country_medals,
-        locations="country_code",
-        color="Total",
-        hover_name="country_long",
-        color_continuous_scale="YlOrBr",
-    )
-    st.plotly_chart(fig_map, use_container_width=True)
+    if df_country_medals.empty:
+        st.info("No medal data available for selected filters.")
+    else:
+        fig_map = px.choropleth(
+            df_country_medals,
+            locations="country_code",
+            color="Total",
+            hover_name="country_long",
+            color_continuous_scale="YlOrBr",
+        )
+        st.plotly_chart(fig_map, use_container_width=True)
 
 
 # -----------------------------------------------------
@@ -124,13 +131,16 @@ with tab1:
 with tab2:
     st.subheader("🌞 Medal Hierarchy by Continent → Country → Sport")
 
-    fig_sun = px.sunburst(
-        df_sunburst,
-        path=["continent", "country", "discipline"],
-        values="count",
-        color="continent",
-    )
-    st.plotly_chart(fig_sun, use_container_width=True)
+    if df_sunburst.empty:
+        st.info("No data available for selected filters.")
+    else:
+        fig_sun = px.sunburst(
+            df_sunburst,
+            path=["continent", "country", "discipline"],
+            values="count",
+            color="continent",
+        )
+        st.plotly_chart(fig_sun, use_container_width=True)
 
 
 # -----------------------------------------------------
@@ -139,15 +149,18 @@ with tab2:
 with tab3:
     st.subheader("📊 Medals by Continent and Medal Type")
 
-    fig_cont = px.bar(
-        df_continent_medals,
-        x="continent",
-        y="count",
-        color="medal_type",
-        barmode="group",
-        color_discrete_map=MEDAL_COLOR_MAP,
-    )
-    st.plotly_chart(fig_cont, use_container_width=True)
+    if df_continent_medals.empty:
+        st.info("No data available for selected filters.")
+    else:
+        fig_cont = px.bar(
+            df_continent_medals,
+            x="continent",
+            y="count",
+            color="medal_type",
+            barmode="group",
+            color_discrete_map=MEDAL_COLOR_MAP,
+        )
+        st.plotly_chart(fig_cont, use_container_width=True)
 
 
 # -----------------------------------------------------
@@ -156,24 +169,27 @@ with tab3:
 with tab4:
     st.subheader("🏆 Top 20 Countries by Total Medals")
 
-    df_top20 = df_country_medals.head(20)
-    df_top20_melt = df_top20.melt(
-        id_vars=["country_long"],
-        value_vars=["Gold", "Silver", "Bronze"],
-        var_name="medal_type",
-        value_name="count",
-    )
+    if df_country_medals.empty:
+        st.info("No countries available for selected filters.")
+    else:
+        df_top20 = df_country_medals.head(20)
+        df_top20_melt = df_top20.melt(
+            id_vars=["country_long"],
+            value_vars=["Gold", "Silver", "Bronze"],
+            var_name="medal_type",
+            value_name="count",
+        )
 
-    fig_top20 = px.bar(
-        df_top20_melt,
-        x="country_long",
-        y="count",
-        color="medal_type",
-        barmode="group",
-        color_discrete_map=MEDAL_COLOR_MAP,
-    )
-    fig_top20.update_layout(xaxis_tickangle=-45)
-    st.plotly_chart(fig_top20, use_container_width=True)
+        fig_top20 = px.bar(
+            df_top20_melt,
+            x="country_long",
+            y="count",
+            color="medal_type",
+            barmode="group",
+            color_discrete_map=MEDAL_COLOR_MAP,
+        )
+        fig_top20.update_layout(xaxis_tickangle=-45)
+        st.plotly_chart(fig_top20, use_container_width=True)
 
 
 # -----------------------------------------------------
@@ -188,19 +204,22 @@ with tab5:
     )
     df_gender = df_gender[df_gender["medal_type"].isin(["Gold", "Silver", "Bronze"])]
 
-    fig_gender = px.bar(
-        df_gender,
-        x="gender",
-        y="count",
-        color="medal_type",
-        barmode="group",
-        color_discrete_map=MEDAL_COLOR_MAP,
-    )
-    st.plotly_chart(fig_gender, use_container_width=True)
+    if df_gender.empty:
+        st.info("No gender data available.")
+    else:
+        fig_gender = px.bar(
+            df_gender,
+            x="gender",
+            y="count",
+            color="medal_type",
+            barmode="group",
+            color_discrete_map=MEDAL_COLOR_MAP,
+        )
+        st.plotly_chart(fig_gender, use_container_width=True)
 
 
 # -----------------------------------------------------
-# TAB 6 — Top 10 Sports by Medal Count
+# TAB 6 — Top 10 Sports
 # -----------------------------------------------------
 with tab6:
     st.subheader("🏅 Top 10 Sports by Medal Count")
@@ -215,18 +234,21 @@ with tab6:
 
         df_sport = df_sport[df_sport["medal_type"].isin(["Gold", "Silver", "Bronze"])]
 
-        totals = df_sport.groupby("discipline")["count"].sum().reset_index()
-        top10 = totals.sort_values("count", ascending=False).head(10)["discipline"]
+        if df_sport.empty:
+            st.info("No sport data available.")
+        else:
+            totals = df_sport.groupby("discipline")["count"].sum().reset_index()
+            top10 = totals.sort_values("count", ascending=False).head(10)["discipline"]
 
-        df_sport_top10 = df_sport[df_sport["discipline"].isin(top10)]
+            df_sport_top10 = df_sport[df_sport["discipline"].isin(top10)]
 
-        fig_sport = px.bar(
-            df_sport_top10,
-            x="discipline",
-            y="count",
-            color="medal_type",
-            barmode="group",
-            color_discrete_map=MEDAL_COLOR_MAP,
-        )
-        fig_sport.update_layout(xaxis_tickangle=-45)
-        st.plotly_chart(fig_sport, use_container_width=True)
+            fig_sport = px.bar(
+                df_sport_top10,
+                x="discipline",
+                y="count",
+                color="medal_type",
+                barmode="group",
+                color_discrete_map=MEDAL_COLOR_MAP,
+            )
+            fig_sport.update_layout(xaxis_tickangle=-45)
+            st.plotly_chart(fig_sport, use_container_width=True)

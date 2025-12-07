@@ -29,6 +29,9 @@ st.markdown("### Explore the world of sports at a glance, uncover how nations, a
 # -----------------------------------------------------
 df_medals_total, df_medallists, df_medals = prepare_medals_datasets()
 
+# ADD NORMALIZED NAME COLUMN BEFORE FILTERING (IMPORTANT FIX)
+df_medallists["name_norm"] = df_medallists["name"].apply(normalize_name)
+
 @st.cache_data
 def load_extra_data():
     DATA = os.path.join(os.path.dirname(__file__), "data")
@@ -40,7 +43,7 @@ def load_extra_data():
 
 athletes, teams, events, nocs = load_extra_data()
 
-# ADD CONTINENT COLUMN TO ATHLETES
+# ADD CONTINENT COLUMN TO ATHLETES TO ENABLE CONTINENT FILTERING
 athletes = add_continent_column(athletes, "country_code")
 
 
@@ -49,8 +52,11 @@ athletes = add_continent_column(athletes, "country_code")
 # -----------------------------------------------------
 filters = global_filters(df_medallists)
 
-# Filter medallists (base dataset for global filtering)
+# Filter medallists
 df_filtered_medallists = apply_global_filters(df_medallists, filters)
+
+# Ensure name_norm exists after filtering
+df_filtered_medallists["name_norm"] = df_filtered_medallists["name"].apply(normalize_name)
 
 
 # -----------------------------------------------------
@@ -76,19 +82,19 @@ if filters["selected_countries"]:
 # -----------------------------------------------------
 athletes_filtered = athletes.copy()
 
-# 1️⃣ Continent filter
+# Continent filter
 if filters["continent"]:
     athletes_filtered = athletes_filtered[
         athletes_filtered["continent"].isin(filters["continent"])
     ]
 
-# 2️⃣ Country filter
+# Country filter
 if filters["selected_countries"]:
     athletes_filtered = athletes_filtered[
         athletes_filtered["country_code"].isin(filters["selected_countries"])
     ]
 
-# 3️⃣ Gender filter
+# Gender filter
 if filters["selected_genders"]:
     athletes_filtered = athletes_filtered[
         athletes_filtered["gender"].isin(filters["selected_genders"])
@@ -96,7 +102,7 @@ if filters["selected_genders"]:
 
 
 # -----------------------------------------------------
-# KPI SECTION (NOW FULLY FILTERED)
+# KPI SECTION — ALL FILTERS APPLIED
 # -----------------------------------------------------
 st.subheader("📊 Overall Statistics")
 

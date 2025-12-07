@@ -102,7 +102,11 @@ def apply_global_filters(df: pd.DataFrame, filters: dict) -> pd.DataFrame:
         df_f = df_f[df_f["medal_type"].isin(filters["selected_medal_types"])]
 
     # Gender
-    if "gender" in df_f.columns and filters["selected_genders"]:
-        df_f = df_f[df_f["gender"].isin(filters["selected_genders"])]
+    
+    if "gender" in df_f.columns:
+        if len(filters["selected_genders"]) == 0:
+            df_f = df_f.iloc[0:0]   # return empty df when no gender selected
+        else:
+            df_f = df_f[df_f["gender"].isin(filters["selected_genders"])]
 
     return df_f
