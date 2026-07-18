@@ -50,7 +50,7 @@ A dynamic **Athlete Profile Card** has been added directly on the home page.
 
 
 ## 🗺️ Page 2 — Global Analysis (Worldwide Insights)
-#### Accomplished BY : MAROUF Zohra
+#### Accomplished BY : MAROUF Zahra
 
 
 ### **Objective**
